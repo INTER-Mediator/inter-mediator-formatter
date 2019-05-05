@@ -1,0 +1,25 @@
+{
+  "name": "inter-mediator-formatter",
+  "version": "1.0.0",
+  "description": "The string formatter of INTER-Mediator core.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/INTER-Mediator/inter-mediator-formatter.git"
+  },
+  "keywords": [
+    "INTER-Mediator",
+    "format"
+  ],
+  "dependencies": {
+  },
+  "author": "Masayuki Nii",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/INTER-Mediator/inter-mediator-formatter/issues"
+  },
+  "homepage": "https://github.com/INTER-Mediator/inter-mediator-formatter#readme"
+}
