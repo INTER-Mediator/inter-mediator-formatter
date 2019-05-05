@@ -9,11 +9,54 @@
  */
 
 // JSHint support
-/* global INTERMediator, INTERMediatorOnPage, IMLibMouseEventDispatch, IMLibUI, IMLibKeyDownEventDispatch,
+/* global INTERMediator, INTERMediatorLocale, IMLibMouseEventDispatch, IMLibUI, IMLibKeyDownEventDispatch,
  IMLibChangeEventDispatch, INTERMediatorLib, INTERMediator_DBAdapter, IMLibQueue, IMLibCalc, IMLibPageNavigation,
  IMLibEventResponder, IMLibElement, Parser, IMLib */
 
 let IMLibFormat = {
+
+  toNumber: function (str) {
+    'use strict'
+    var s = ''
+    let i, c
+    var dp = INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.'
+    str = str.toString()
+    for (i = 0; i < str.length; i += 1) {
+      c = str.charAt(i)
+      if ((c >= '0' && c <= '9') || c === '.' || c === '-' ||
+        c === dp) {
+        s += c
+      } else if (c >= '０' && c <= '９') {
+        s += String.fromCharCode(c.charCodeAt(0) - '０'.charCodeAt(0) + '0'.charCodeAt(0))
+      }
+    }
+    return parseFloat(s)
+  },
+
+  normalizeNumerics: function (value) {
+    'use strict'
+    var i
+    var punc = INTERMediatorLocale.decimal_point ? INTERMediatorLocale.decimal_point : '.'
+    var mpunc = INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.'
+    var rule = '0123456789'
+    if (punc) {
+      rule += '\\' + punc
+    }
+    if (mpunc && mpunc !== punc) {
+      rule += '\\' + mpunc
+    }
+    rule = '[^' + rule + ']'
+    value = String(value)
+    if (value && value.match(/[０１２３４５６７８９]/)) {
+      for (i = 0; i < 10; i += 1) {
+        value = value.split(String.fromCharCode(65296 + i)).join(String(i))
+        // Full-width numeric characters start from 0xFF10(65296). This is convert to Full to ASCII char for numeric.
+      }
+      value = value.replace('．', '.')
+    }
+    return value ? parseFloat(value.replace(new RegExp(rule, 'g'), '')) : ''
+  },
+
   /**
    * This method returns the rounded value of the 1st parameter to the 2nd parameter from decimal point
    * with a thousands separator.
@@ -39,18 +82,17 @@ let IMLibFormat = {
     if (String(str).match(/[-]/)) {
       str = prefix + String(str).split('-').join('')
     }
-    // str = INTERMediatorLib.normalizeNumerics(str)
-    n = INTERMediatorLib.toNumber(str)
+    n = IMLibFormat.toNumber(str)
     if (isNaN(n)) {
       return ''
     }
     if (flags === undefined) {
       flags = {}
     }
-    sign = INTERMediatorOnPage.localeInfo.positive_sign
+    sign = INTERMediatorLocale.positive_sign
     isMinusValue = false
     if (n < 0) {
-      sign = INTERMediatorOnPage.localeInfo.negative_sign
+      sign = INTERMediatorLocale.negative_sign
       if (flags.negativeStyle === 0 || flags.negativeStyle === 1) {
         sign = '-'
       } else if (flags.negativeStyle === 2) {
@@ -76,7 +118,7 @@ let IMLibFormat = {
       n = n * 100
     }
 
-    underDot = (digit === undefined) ? INTERMediatorOnPage.localeInfo.frac_digits : INTERMediatorLib.toNumber(digit)
+    underDot = (digit === undefined) ? INTERMediatorLocale.frac_digits : IMLibFormat.toNumber(digit)
     power = Math.pow(10, underDot)
     roundedNum = Math.round(n * power)
     underDecimalNum = (underDot > 0) ? roundedNum % power : 0
@@ -200,28 +242,28 @@ let IMLibFormat = {
 
     if (currencySymbol) {
       if (!isMinusValue) {
-        if (parseInt(INTERMediatorOnPage.localeInfo.p_cs_precedes) === 1) { // Stay operator "=="
-          if (parseInt(INTERMediatorOnPage.localeInfo.p_sep_by_space) === 1) { // Stay operator "=="
+        if (parseInt(INTERMediatorLocale.p_cs_precedes) === 1) { // Stay operator "=="
+          if (parseInt(INTERMediatorLocale.p_sep_by_space) === 1) { // Stay operator "=="
             formatted = currencySymbol + ' ' + formatted
           } else {
             formatted = currencySymbol + formatted
           }
         } else {
-          if (parseInt(INTERMediatorOnPage.localeInfo.p_sep_by_space) === 1) { // Stay operator '=='
+          if (parseInt(INTERMediatorLocale.p_sep_by_space) === 1) { // Stay operator '=='
             formatted = formatted + ' ' + currencySymbol
           } else {
             formatted = formatted + currencySymbol
           }
         }
       } else {
-        if (parseInt(INTERMediatorOnPage.localeInfo.n_cs_precedes) === 1) { // Stay operator "=="
-          if (parseInt(INTERMediatorOnPage.localeInfo.n_sep_by_space) === 1) { // Stay operator "=="
+        if (parseInt(INTERMediatorLocale.n_cs_precedes) === 1) { // Stay operator "=="
+          if (parseInt(INTERMediatorLocale.n_sep_by_space) === 1) { // Stay operator "=="
             formatted = currencySymbol + ' ' + formatted
           } else {
             formatted = currencySymbol + formatted
           }
         } else {
-          if (parseInt(INTERMediatorOnPage.localeInfo.n_sep_by_space) === 1) { // Stay operator '=='
+          if (parseInt(INTERMediatorLocale.n_sep_by_space) === 1) { // Stay operator '=='
             formatted = formatted + ' ' + currencySymbol
           } else {
             formatted = formatted + currencySymbol
@@ -305,8 +347,8 @@ let IMLibFormat = {
     }
     flags.usePercentNotation = true
     return IMLibFormat.numberFormatImpl(str, digit,
-      INTERMediatorOnPage.localeInfo.mon_decimal_point ? INTERMediatorOnPage.localeInfo.mon_decimal_point : '.',
-      INTERMediatorOnPage.localeInfo.mon_thousands_sep ? INTERMediatorOnPage.localeInfo.mon_thousands_sep : ',',
+      INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.',
+      INTERMediatorLocale.mon_thousands_sep ? INTERMediatorLocale.mon_thousands_sep : ',',
       false,
       flags
     )
@@ -315,8 +357,8 @@ let IMLibFormat = {
   decimalFormat: function (str, digit, flags) {
     'use strict'
     return IMLibFormat.numberFormatImpl(str, digit,
-      INTERMediatorOnPage.localeInfo.mon_decimal_point ? INTERMediatorOnPage.localeInfo.mon_decimal_point : '.',
-      INTERMediatorOnPage.localeInfo.mon_thousands_sep ? INTERMediatorOnPage.localeInfo.mon_thousands_sep : ',',
+      INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.',
+      INTERMediatorLocale.mon_thousands_sep ? INTERMediatorLocale.mon_thousands_sep : ',',
       false,
       flags
     )
@@ -325,9 +367,9 @@ let IMLibFormat = {
   currencyFormat: function (str, digit, flags) {
     'use strict'
     return IMLibFormat.numberFormatImpl(str, digit,
-      INTERMediatorOnPage.localeInfo.mon_decimal_point ? INTERMediatorOnPage.localeInfo.mon_decimal_point : '.',
-      INTERMediatorOnPage.localeInfo.mon_thousands_sep ? INTERMediatorOnPage.localeInfo.mon_thousands_sep : ',',
-      INTERMediatorOnPage.localeInfo.currency_symbol ? INTERMediatorOnPage.localeInfo.currency_symbol : '¥',
+      INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.',
+      INTERMediatorLocale.mon_thousands_sep ? INTERMediatorLocale.mon_thousands_sep : ',',
+      INTERMediatorLocale.currency_symbol ? INTERMediatorLocale.currency_symbol : '¥',
       flags
     )
   },
@@ -400,11 +442,11 @@ let IMLibFormat = {
     }, // 月数値 7
     '%b': function () {
       'use strict'
-      return INTERMediatorOnPage.localeInfo.ABMON[this.getMonth()]
+      return INTERMediatorLocale.ABMON[this.getMonth()]
     }, // 短縮月名 Jul
     '%B': function () {
       'use strict'
-      return INTERMediatorOnPage.localeInfo.MON[this.getMonth()]
+      return INTERMediatorLocale.MON[this.getMonth()]
     }, // 月名 July
     '%t': function () {
       'use strict'
@@ -429,11 +471,11 @@ let IMLibFormat = {
     }, // 英語曜日名 Monday
     '%w': function () {
       'use strict'
-      return INTERMediatorOnPage.localeInfo.ABDAY[this.getDay()]
+      return INTERMediatorLocale.ABDAY[this.getDay()]
     }, // ロカールによる短縮曜日名 月
     '%W': function () {
       'use strict'
-      return INTERMediatorOnPage.localeInfo.DAY[this.getDay()]
+      return INTERMediatorLocale.DAY[this.getDay()]
     }, // ロカールによる曜日名 月曜日
     '%H': function () {
       'use strict'
@@ -478,7 +520,7 @@ let IMLibFormat = {
     }, // am/pm am
     '%N': function () {
       'use strict'
-      return Math.floor(this.getHours() / 12) === 0 ? INTERMediatorOnPage.localeInfo.AM_STR : INTERMediatorOnPage.localeInfo.PM_STR
+      return Math.floor(this.getHours() / 12) === 0 ? INTERMediatorLocale.AM_STR : INTERMediatorLocale.PM_STR
     }, // am/pm am
     // '%Z': Date.prototype.getTimezoneOffset, // タイムゾーン省略名 JST
     // '%z': Date.prototype.getTimezoneOffset, // タイムゾーンオフセット +0900
@@ -535,10 +577,10 @@ let IMLibFormat = {
     var paramStr = params.trim().toUpperCase()
     var kind = flags.trim().toUpperCase()
     var key = kind.substr(0, 1) + '_FMT_' + paramStr
-    if (INTERMediatorOnPage.localeInfo[key]) {
-      params = INTERMediatorOnPage.localeInfo[key]
+    if (INTERMediatorLocale[key]) {
+      params = INTERMediatorLocale[key]
       if (kind === 'DATETIME') {
-        params += ' ' + INTERMediatorOnPage.localeInfo['T_FMT_' + paramStr]
+        params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
       }
     }
     hasColon = str.indexOf(':') > -1
@@ -570,8 +612,8 @@ let IMLibFormat = {
 
   convertNumeric: function (value) {
     'use strict'
-    value = value.replace(new RegExp(INTERMediatorOnPage.localeInfo.mon_thousands_sep, 'g'), '')
-    value = INTERMediatorLib.normalizeNumerics(value)
+    value = value.replace(new RegExp(INTERMediatorLocale.mon_thousands_sep, 'g'), '')
+    value = IMLibFormat.normalizeNumerics(value)
     if (value !== '') {
       value = parseFloat(value)
     }
@@ -607,9 +649,9 @@ let IMLibFormat = {
 
   convertPercent: function (value) {
     'use strict'
-    value = value.replace(new RegExp(INTERMediatorOnPage.localeInfo.mon_thousands_sep, 'g'), '')
+    value = value.replace(new RegExp(INTERMediatorLocale.mon_thousands_sep, 'g'), '')
     value = value.replace('%', '')
-    value = INTERMediatorLib.normalizeNumerics(value)
+    value = IMLibFormat.normalizeNumerics(value)
     if (value !== '') {
       value = parseFloat(value) / 100
     }
@@ -637,17 +679,17 @@ let IMLibFormat = {
     let regexp = ''
     var r, matched, y, m, d, h, i, s, paramStr, kind, key, mon
     IMLibFormat.reverseRegExp['%N'] =
-      '(' + (typeof (INTERMediatorOnPage) == 'undefined' ? 'AM' : INTERMediatorOnPage.localeInfo.AM_STR)
-      + '|' + (typeof (INTERMediatorOnPage) == 'undefined' ? 'PM' : INTERMediatorOnPage.localeInfo.PM_STR) + ')'
+      '(' + (typeof (INTERMediatorLocale) == 'undefined' ? 'AM' : INTERMediatorLocale.AM_STR)
+      + '|' + (typeof (INTERMediatorLocale) == 'undefined' ? 'PM' : INTERMediatorLocale.PM_STR) + ')'
 
 
     paramStr = params.trim().toUpperCase()
     kind = flags.trim().toUpperCase()
     key = kind.substr(0, 1) + '_FMT_' + paramStr
-    if (INTERMediatorOnPage.localeInfo[key]) {
-      params = INTERMediatorOnPage.localeInfo[key]
+    if (INTERMediatorLocale[key]) {
+      params = INTERMediatorLocale[key]
       if (kind === 'DATETIME') {
-        params += ' ' + INTERMediatorOnPage.localeInfo['T_FMT_' + paramStr]
+        params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
       }
     }
     params = params.replace(/([\(\)])/g, '\\$1')
@@ -745,5 +787,4 @@ let IMLibFormat = {
 
 // @@IM@@IgnoringRestOfFile
 module.exports = IMLibFormat
-const INTERMediatorOnPage = require('../../src/js/INTER-Mediator-Page')
-const INTERMediatorLib = require('../../src/js/INTER-Mediator-Lib')
+INTERMediatorLocale = require('../inter-mediator-locale/index')
