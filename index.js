@@ -89,6 +89,7 @@ let IMLibFormat = {
     if (flags === undefined) {
       flags = {}
     }
+
     sign = INTERMediatorLocale.positive_sign
     isMinusValue = false
     if (n < 0) {
@@ -238,6 +239,13 @@ let IMLibFormat = {
       } else {
         formatted = sign + formatted
       }
+    }
+
+    if(formatted.indexOf(decimalPoint)===0){
+      formatted = "0" + formatted
+    }
+    if(formatted.indexOf(sign + decimalPoint)===0){
+      formatted = sign + Math.abs(formatted)
     }
 
     if (currencySymbol) {
