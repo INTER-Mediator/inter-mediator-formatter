@@ -795,4 +795,3 @@ let IMLibFormat = {
 
 // @@IM@@IgnoringRestOfFile
 module.exports = IMLibFormat
-INTERMediatorLocale = require('../inter-mediator-locale/index')
