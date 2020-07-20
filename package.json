@@ -1,28 +1,29 @@
 {
-  "name": "inter-mediator-formatter",
-  "version": "1.0.5",
-  "description": "The string formatter of INTER-Mediator core.",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "test": "node_modules/jest/bin/jest.js formatter.test.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/INTER-Mediator/inter-mediator-formatter.git"
-  },
-  "keywords": [
-    "INTER-Mediator",
-    "format"
-  ],
-  "devDependencies": {
-    "jest": "*"
-  },
-  "dependencies": {},
-  "author": "Masayuki Nii",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/INTER-Mediator/inter-mediator-formatter/issues"
-  },
-  "homepage": "https://github.com/INTER-Mediator/inter-mediator-formatter#readme"
+    "name": "inter-mediator-formatter",
+    "version": "1.0.6",
+    "description": "The string formatter of INTER-Mediator core.",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "node_modules/jest/bin/jest.js formatter.test.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/INTER-Mediator/inter-mediator-formatter.git"
+    },
+    "keywords": [
+        "INTER-Mediator",
+        "format"
+    ],
+    "devDependencies": {
+        "jest": "^26.1.0",
+        "lodash": ">=4.17.19"
+    },
+    "dependencies": {},
+    "author": "Masayuki Nii",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/INTER-Mediator/inter-mediator-formatter/issues"
+    },
+    "homepage": "https://github.com/INTER-Mediator/inter-mediator-formatter#readme"
 }
