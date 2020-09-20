@@ -16,8 +16,8 @@
         "format"
     ],
     "devDependencies": {
-        "jest": "^26.1.0",
-        "lodash": ">=4.17.19"
+        "jest": "^26.4.2",
+        "lodash": "^4.17.20"
     },
     "dependencies": {},
     "author": "Masayuki Nii",
