@@ -15,6 +15,8 @@
 
 let IMLibFormat = {
 
+  isFollowTZ: false,
+
   toNumber: function (str) {
     'use strict'
     var s = ''
@@ -241,10 +243,10 @@ let IMLibFormat = {
       }
     }
 
-    if(formatted.indexOf(decimalPoint)===0){
-      formatted = "0" + formatted
+    if (formatted.indexOf(decimalPoint) === 0) {
+      formatted = '0' + formatted
     }
-    if(formatted.indexOf(sign + decimalPoint)===0){
+    if (formatted.indexOf(sign + decimalPoint) === 0) {
       formatted = sign + Math.abs(formatted)
     }
 
@@ -599,6 +601,9 @@ let IMLibFormat = {
     } else if (hasColon && !hasSlash && !hasDash) {
       str = '1970/01/01 ' + str
     }
+    if (IMLibFormat.isFollowTZ) {
+      str += '+0000'
+    }
     dt = new Date(str)
     if (dt.toString() === 'Invalid Date') {
       dt = new Date(str.replace(/-/g, '/'))
@@ -682,7 +687,7 @@ let IMLibFormat = {
 
   convertDateTimeImpl: function (value, params, flags) {
     'use strict'
-    var c, result
+    var c, dt, result
     let replacement = []
     let regexp = ''
     var r, matched, y, m, d, h, i, s, paramStr, kind, key, mon
@@ -750,12 +755,27 @@ let IMLibFormat = {
       }
       if (y && m && d && h && i && s) {
         result = y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s
+        if (IMLibFormat.isFollowTZ) {
+          dt = new Date(result)
+          result = dt.getUTCFullYear() + '-' + (dt.getUTCMonth() + 1) + '-' + dt.getUTCDate() + ' '
+            + dt.getUTCHours() + ':' + dt.getUTCMinutes() + ':' + dt.getUTCSeconds()
+        }
       } else if (y && m && d) {
         result = y + '-' + m + '-' + d
+        if (IMLibFormat.isFollowTZ) {
+          dt = new Date(result)
+          result = dt.getUTCFullYear() + '-' + (dt.getUTCMonth() + 1) + '-' + dt.getUTCDate()
+        }
       } else if (h && i && s) {
         result = h + ':' + i + ':' + s
+        if (IMLibFormat.isFollowTZ) {
+          dt = new Date()
+          dt.setHours(h, i, s)
+          result = dt.getUTCHours() + ':' + dt.getUTCMinutes() + ':' + dt.getUTCSeconds()
+        }
       }
     }
+    console.log(result)
     return result
   },
 
