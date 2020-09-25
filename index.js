@@ -775,7 +775,6 @@ let IMLibFormat = {
         }
       }
     }
-    console.log(result)
     return result
   },
 
