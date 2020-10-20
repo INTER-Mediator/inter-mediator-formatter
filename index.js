@@ -712,7 +712,9 @@ const IMLibFormat = {
     if (INTERMediatorLocale[key]) {
       params = INTERMediatorLocale[key]
       if (kind === 'DATETIME') {
-        params += ((flags == 'datetimelocal') ? 'T' : ' ') + INTERMediatorLocale['T_FMT_' + paramStr]
+        params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
+      } else if (kind === 'DATETIME') {
+        params += 'T' + INTERMediatorLocale['T_FMT_' + paramStr]
       }
     }
     params = params.replace(/([\(\)])/g, '\\$1')
