@@ -594,7 +594,7 @@ const IMLibFormat = {
     const key = kind.substr(0, 1) + '_FMT_' + paramStr
     if (INTERMediatorLocale[key]) {
       params = INTERMediatorLocale[key]
-      if (kind === 'DATETIME') {
+      if (kind === 'DATETIME'||kind === 'DATETIMELOCALE') {
         params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
       }
     }

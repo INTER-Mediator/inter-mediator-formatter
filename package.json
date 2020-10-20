@@ -1,6 +1,6 @@
 {
     "name": "inter-mediator-formatter",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "description": "The string formatter of INTER-Mediator core.",
     "main": "index.js",
     "type": "module",
