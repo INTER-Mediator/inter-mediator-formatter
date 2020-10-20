@@ -589,7 +589,7 @@ const IMLibFormat = {
     let result = ''
     let replaced, hasColon, hasSlash, hasDash
     str = (Object.prototype.toString.call(str) === '[object Array]') ? str.join() : str
-    const paramStr = (flags != 'datetimelocal') ? params.trim().toUpperCase() : 'SHORT'
+    const paramStr = (flags != 'datetimelocal') ? params.trim().toUpperCase() : 'MIDDLE'
     const kind = flags.trim().toUpperCase()
     const key = kind.substr(0, 1) + '_FMT_' + paramStr
     if (INTERMediatorLocale[key]) {
