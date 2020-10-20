@@ -13,15 +13,15 @@
  IMLibChangeEventDispatch, INTERMediatorLib, INTERMediator_DBAdapter, IMLibQueue, IMLibCalc, IMLibPageNavigation,
  IMLibEventResponder, IMLibElement, Parser, IMLib */
 
-let IMLibFormat = {
+const IMLibFormat = {
 
   isFollowTZ: false,
 
   toNumber: function (str) {
     'use strict'
-    var s = ''
+    let s = ''
     let i, c
-    var dp = INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.'
+    const dp = INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.'
     str = str.toString()
     for (i = 0; i < str.length; i += 1) {
       c = str.charAt(i)
@@ -37,10 +37,10 @@ let IMLibFormat = {
 
   normalizeNumerics: function (value) {
     'use strict'
-    var i
-    var punc = INTERMediatorLocale.decimal_point ? INTERMediatorLocale.decimal_point : '.'
-    var mpunc = INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.'
-    var rule = '0123456789'
+    let i
+    const punc = INTERMediatorLocale.decimal_point ? INTERMediatorLocale.decimal_point : '.'
+    const mpunc = INTERMediatorLocale.mon_decimal_point ? INTERMediatorLocale.mon_decimal_point : '.'
+    let rule = '0123456789'
     if (punc) {
       rule += '\\' + punc
     }
@@ -73,7 +73,7 @@ let IMLibFormat = {
 
   numberFormatImpl: function (str, digit, decimalPoint, thousandsSep, currencySymbol, flags) {
     'use strict'
-    var s, n, prefix, i, sign
+    let s, n, prefix, i, sign
     let tailSign = ''
     let power, underDot, underNumStr, pstr, roundedNum, underDecimalNum, integerNum,
       formatted, numStr, j, isMinusValue, numerals, numbers
@@ -331,7 +331,7 @@ let IMLibFormat = {
 
   getKanjiNumber: function (n) {
     'use strict'
-    var s = []
+    const s = []
     let count = 0
     String(n).split('').reverse().forEach(function (c) {
       s.push(IMLibFormat.kanjiDigit[count])
@@ -386,10 +386,10 @@ let IMLibFormat = {
 
   booleanFormat: function (str, forms) {
     'use strict'
-    var trueString = 'true'
+    let trueString = 'true'
     let falseString = 'false'
     let fmtStr
-    var params = forms.split(',')
+    const params = forms.split(',')
     if (params[0]) {
       fmtStr = params[0].trim()
       if (fmtStr.length > 0) {
@@ -416,6 +416,11 @@ let IMLibFormat = {
   datetimeFormat: function (str, params) {
     'use strict'
     return IMLibFormat.datetimeFormatImpl(str, params, 'datetime')
+  },
+
+  dateTimeLocalFormat: function (str, params) {
+    'use strict'
+    return IMLibFormat.datetimeFormatImpl(str, params, 'datetimelocal')
   },
 
   dateFormat: function (str, params) {
@@ -502,12 +507,12 @@ let IMLibFormat = {
     }, // 12時間制時数値 9
     '%K': function () {
       'use strict'
-      var n = this.getHours() % 12
+      const n = this.getHours() % 12
       return IMLibFormat.tweDigitsNumber(n === 0 ? 12 : n)
     }, // 12時間制時2桁 09
     '%k': function () {
       'use strict'
-      var n = this.getHours() % 12
+      const n = this.getHours() % 12
       return n === 0 ? 12 : n
     }, // 12時間制時数値 9
     '%I': function () {
@@ -542,7 +547,7 @@ let IMLibFormat = {
 
   tweDigitsNumber: function (n) {
     'use strict'
-    var v = parseInt(n)
+    const v = parseInt(n)
     return ('0' + v.toString()).substr(-2, 2)
   },
 
@@ -558,7 +563,7 @@ let IMLibFormat = {
 
   getLocalYear: function (dt, fmt) {
     'use strict'
-    var gengoName, gengoYear, startDateStr, dtStart
+    let gengoName, gengoYear, startDateStr, dtStart
     if (!dt) {
       return ''
     }
@@ -580,13 +585,13 @@ let IMLibFormat = {
 
   datetimeFormatImpl: function (str, params, flags) {
     'use strict'
-    var dt, c
+    let dt, c
     let result = ''
     let replaced, hasColon, hasSlash, hasDash
     str = (Object.prototype.toString.call(str) === '[object Array]') ? str.join() : str
-    var paramStr = params.trim().toUpperCase()
-    var kind = flags.trim().toUpperCase()
-    var key = kind.substr(0, 1) + '_FMT_' + paramStr
+    const paramStr = (flags != 'datetimelocal') ? params.trim().toUpperCase() : 'DATETIME'
+    const kind = flags.trim().toUpperCase()
+    const key = kind.substr(0, 1) + '_FMT_' + paramStr
     if (INTERMediatorLocale[key]) {
       params = INTERMediatorLocale[key]
       if (kind === 'DATETIME') {
@@ -635,11 +640,11 @@ let IMLibFormat = {
 
   convertBoolean: function (value, forms) {
     'use strict'
-    var trueString = 'true'
+    let trueString = 'true'
     let falseString = 'false'
     let fmtStr
     value = value.trim()
-    var params = forms.split(',')
+    const params = forms.split(',')
     if (params[0]) {
       fmtStr = params[0].trim()
       if (fmtStr.length > 0) {
@@ -685,24 +690,29 @@ let IMLibFormat = {
     return IMLibFormat.convertDateTimeImpl(value, params, 'datetime')
   },
 
+  convertDateTimeLocal: function (value, params) {
+    'use strict'
+    return IMLibFormat.convertDateTimeImpl(value, params, 'datetimelocal')
+  },
+
   convertDateTimeImpl: function (value, params, flags) {
     'use strict'
-    var c, dt, result
-    let replacement = []
+    let c, dt, result
+    const replacement = []
     let regexp = ''
-    var r, matched, y, m, d, h, i, s, paramStr, kind, key, mon
+    let r, matched, y, m, d, h, i, s, paramStr, kind, key, mon
     IMLibFormat.reverseRegExp['%N'] =
       '(' + (typeof (INTERMediatorLocale) == 'undefined' ? 'AM' : INTERMediatorLocale.AM_STR)
       + '|' + (typeof (INTERMediatorLocale) == 'undefined' ? 'PM' : INTERMediatorLocale.PM_STR) + ')'
 
 
-    paramStr = params.trim().toUpperCase()
+    paramStr = (flags != 'datetimelocal') ? params.trim().toUpperCase() : 'DATETIME'
     kind = flags.trim().toUpperCase()
     key = kind.substr(0, 1) + '_FMT_' + paramStr
     if (INTERMediatorLocale[key]) {
       params = INTERMediatorLocale[key]
       if (kind === 'DATETIME') {
-        params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
+        params += ((flags == 'datetimelocal') ? 'T' : ' ') + INTERMediatorLocale['T_FMT_' + paramStr]
       }
     }
     params = params.replace(/([\(\)])/g, '\\$1')
