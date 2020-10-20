@@ -585,26 +585,31 @@ const IMLibFormat = {
 
   datetimeFormatImpl: function (str, params, flags) {
     'use strict'
-    let dt, c
-    let result = ''
-    let replaced, hasColon, hasSlash, hasDash
+    let dt, c, result = '', replaced
     str = (Object.prototype.toString.call(str) === '[object Array]') ? str.join() : str
-    const paramStr = (flags != 'datetimelocal') ? params.trim().toUpperCase() : 'MIDDLE'
+    const hasColon = str.indexOf(':') > -1
+    const hasSlash = str.indexOf('/') > -1
+    const hasDash = str.indexOf('-') > -1
     const kind = flags.trim().toUpperCase()
-    const key = kind.substr(0, 1) + '_FMT_' + paramStr
-    if (INTERMediatorLocale[key]) {
-      params = INTERMediatorLocale[key]
-      if (kind === 'DATETIME'||kind === 'DATETIMELOCAL') {
-        params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
+    if (kind != 'DATETIMELOCAL') {
+      const paramStr = params.trim().toUpperCase()
+      const key = kind.substr(0, 1) + '_FMT_' + paramStr
+      if (INTERMediatorLocale[key]) {
+        params = INTERMediatorLocale[key]
+        if (kind === 'DATETIME') {
+          params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
+        }
       }
-    }
-    hasColon = str.indexOf(':') > -1
-    hasSlash = str.indexOf('/') > -1
-    hasDash = str.indexOf('-') > -1
-    if (!hasColon && (hasSlash || hasDash)) {
-      str += ' 00:00:00'
-    } else if (hasColon && !hasSlash && !hasDash) {
-      str = '1970/01/01 ' + str
+      if (!hasColon && (hasSlash || hasDash)) {
+        str += ' 00:00:00'
+      } else if (hasColon && !hasSlash && !hasDash) {
+        str = '1970/01/01 ' + str
+      }
+    } else {
+      params = '%Y-%m-%dT%H:%I:%S'
+      if (!hasColon && (hasSlash || hasDash)) {
+        str += ' 00:00:00'
+      }
     }
     if (IMLibFormat.isFollowTZ) {
       str += '+0000'
@@ -697,27 +702,26 @@ const IMLibFormat = {
 
   convertDateTimeImpl: function (value, params, flags) {
     'use strict'
-    let c, dt, result
+    let c, dt, result, regexp = ''
+    let r, matched, y, m, d, h, i, s, paramStr, key, mon
     const replacement = []
-    let regexp = ''
-    let r, matched, y, m, d, h, i, s, paramStr, kind, key, mon
+    const kind = flags.trim().toUpperCase()
     IMLibFormat.reverseRegExp['%N'] =
       '(' + (typeof (INTERMediatorLocale) == 'undefined' ? 'AM' : INTERMediatorLocale.AM_STR)
       + '|' + (typeof (INTERMediatorLocale) == 'undefined' ? 'PM' : INTERMediatorLocale.PM_STR) + ')'
-
-
-    paramStr = (flags != 'datetimelocal') ? params.trim().toUpperCase() : 'SHORT'
-    kind = flags.trim().toUpperCase()
-    key = kind.substr(0, 1) + '_FMT_' + paramStr
-    if (INTERMediatorLocale[key]) {
-      params = INTERMediatorLocale[key]
-      if (kind === 'DATETIME') {
-        params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
-      } else if (kind === 'DATETIME') {
-        params += 'T' + INTERMediatorLocale['T_FMT_' + paramStr]
+    if(kind != 'DATETIMELOCAL') {
+      paramStr = params.trim().toUpperCase()
+      key = kind.substr(0, 1) + '_FMT_' + paramStr
+      if (INTERMediatorLocale[key]) {
+        params = INTERMediatorLocale[key]
+        if (kind === 'DATETIME') {
+          params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
+        }
       }
+      params = params.replace(/([\(\)])/g, '\\$1')
+    } else {
+      params = '%Y-%m-%dT%H:%i:%s'
     }
-    params = params.replace(/([\(\)])/g, '\\$1')
     for (c = 0; c < params.length; c++) {
       if ((c + 1) < params.length && IMLibFormat.reverseRegExp[params.substr(c, 2)]) {
         regexp += IMLibFormat.reverseRegExp[params.substr(c, 2)]
