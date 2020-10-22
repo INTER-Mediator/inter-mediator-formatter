@@ -772,7 +772,7 @@ const IMLibFormat = {
       if (y && m && d && h && i && s) {
         result = y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s
         if (IMLibFormat.isFollowTZ) {
-          dt = new Date(result)
+          dt = new Date(y + '-' + m + '-' + d + 'T' + h + ':' + i + ':' + s)
           result = dt.getUTCFullYear() + '-' + (dt.getUTCMonth() + 1) + '-' + dt.getUTCDate() + ' '
             + dt.getUTCHours() + ':' + dt.getUTCMinutes() + ':' + dt.getUTCSeconds()
         }
