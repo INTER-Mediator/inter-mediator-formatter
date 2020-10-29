@@ -433,6 +433,11 @@ const IMLibFormat = {
     return IMLibFormat.datetimeFormatImpl(str, params, 'time')
   },
 
+  timeFormatLocal: function (str, params) {
+    'use strict'
+    return IMLibFormat.datetimeFormatImpl(str, params, 'timelocal')
+  },
+
   placeHolder: {
     '%Y': Date.prototype.getFullYear, //
     '%y': function () {
@@ -591,7 +596,25 @@ const IMLibFormat = {
     const hasSlash = str.indexOf('/') > -1
     const hasDash = str.indexOf('-') > -1
     const kind = flags.trim().toUpperCase()
-    if (kind != 'DATETIMELOCAL') {
+    if (kind == 'DATETIMELOCAL') {
+      params = '%Y-%m-%dT%H:%I:%S'
+      if (!hasColon && (hasSlash || hasDash)) {
+        str += ' 00:00:00'
+      }
+    } else if (kind == 'TIMELOCAL') {
+      const hasSecondColon = str.indexOf(':', str.indexOf(':') + 1)
+      params = '%H:%I:%S'
+      if (!hasColon) {
+        str = '00:00:00'
+      } else if (!hasSecondColon) {
+        str += ':00'
+      }
+      const dtComp = str.split(':')
+      const today = new Date()
+      str = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2)
+        + '-' + ('0' + today.getDate()).slice(-2) + 'T' + ('0' + dtComp[0]).slice(-2)
+        + ':' + ('0' + dtComp[1]).slice(-2) + ':' + ('0' + dtComp[2]).slice(-2)
+    } else {
       const paramStr = params.trim().toUpperCase()
       const key = kind.substr(0, 1) + '_FMT_' + paramStr
       if (INTERMediatorLocale[key]) {
@@ -604,11 +627,6 @@ const IMLibFormat = {
         str += ' 00:00:00'
       } else if (hasColon && !hasSlash && !hasDash) {
         str = '1970/01/01 ' + str
-      }
-    } else {
-      params = '%Y-%m-%dT%H:%I:%S'
-      if (!hasColon && (hasSlash || hasDash)) {
-        str += ' 00:00:00'
       }
     }
     if (IMLibFormat.isFollowTZ) {
@@ -700,16 +718,26 @@ const IMLibFormat = {
     return IMLibFormat.convertDateTimeImpl(value, params, 'datetimelocal')
   },
 
+  convertTimeLocal: function (value, params) {
+    'use strict'
+    return IMLibFormat.convertDateTimeImpl(value, params, 'timelocal')
+  },
+
   convertDateTimeImpl: function (value, params, flags) {
     'use strict'
-    let c, dt, result, regexp = ''
-    let r, matched, y, m, d, h, i, s, paramStr, key, mon
-    const replacement = []
+    let c, dt, result, regexp = '', replacement = []
+    let r, matched, y, m, d, h, i, s, paramStr, key, mon, anotherParams = null
     const kind = flags.trim().toUpperCase()
     IMLibFormat.reverseRegExp['%N'] =
       '(' + (typeof (INTERMediatorLocale) == 'undefined' ? 'AM' : INTERMediatorLocale.AM_STR)
       + '|' + (typeof (INTERMediatorLocale) == 'undefined' ? 'PM' : INTERMediatorLocale.PM_STR) + ')'
-    if(kind != 'DATETIMELOCAL') {
+    if (kind == 'DATETIMELOCAL') {
+      params = '%Y-%m-%dT%H:%i:%s'
+      anotherParams = '%Y-%m-%dT%H:%i'
+    } else if (kind == 'TIMELOCAL') {
+      params = '%H:%i:%s'
+      anotherParams = '%H:%i'
+    } else {
       paramStr = params.trim().toUpperCase()
       key = kind.substr(0, 1) + '_FMT_' + paramStr
       if (INTERMediatorLocale[key]) {
@@ -719,20 +747,13 @@ const IMLibFormat = {
         }
       }
       params = params.replace(/([\(\)])/g, '\\$1')
-    } else {
-      params = '%Y-%m-%dT%H:%i:%s'
     }
-    for (c = 0; c < params.length; c++) {
-      if ((c + 1) < params.length && IMLibFormat.reverseRegExp[params.substr(c, 2)]) {
-        regexp += IMLibFormat.reverseRegExp[params.substr(c, 2)]
-        replacement.push(params.substr(c, 2))
-        c++
-      } else {
-        regexp += params.substr(c, 1)
-      }
+    [regexp, replacement] = getRegExp(params)
+    matched = (new RegExp(regexp)).exec(value)
+    if (!matched && anotherParams) {
+      [regexp, replacement] = getRegExp(anotherParams)
+      matched = (new RegExp(regexp)).exec(value)
     }
-    r = new RegExp(regexp)
-    matched = r.exec(value)
     result = value
     if (matched) {
       for (c = 0; c < replacement.length; c++) {
@@ -743,55 +764,98 @@ const IMLibFormat = {
             break
           case '%M':
           case '%m':
-            m = matched[c + 1]
+            m = getTwoDigitString(matched[c + 1])
             break
           case '%T':
           case '%t':
             mon = matched[c + 1]
             m = IMLibFormat.eMonAbbr.indexOf(mon.substr(0, 1).toUpperCase() + mon.substr(1, 2).toLowerCase())
-            m++
+            m = getTwoDigitString(m+1)
             break
           case '%D':
           case '%d':
-            d = matched[c + 1]
+            d = getTwoDigitString(matched[c + 1])
             break
           case '%H':
           case '%h':
-            h = matched[c + 1]
+            h = getTwoDigitString(matched[c + 1])
             break
           case '%I':
           case '%i':
-            i = matched[c + 1]
+            i = getTwoDigitString(matched[c + 1])
             break
           case '%S':
           case '%s':
-            s = matched[c + 1]
+            s = getTwoDigitString(matched[c + 1])
             break
         }
       }
-      if (y && m && d && h && i && s) {
-        result = y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s
+      if (y && m && d && h && i) {
+        dt = new Date(y + '-' + m + '-' + d + 'T' + h + ':' + i + ':' + (s ? s : '00'))
         if (IMLibFormat.isFollowTZ) {
-          dt = new Date(y + '-' + m + '-' + d + 'T' + h + ':' + i + ':' + s)
-          result = dt.getUTCFullYear() + '-' + (dt.getUTCMonth() + 1) + '-' + dt.getUTCDate() + ' '
-            + dt.getUTCHours() + ':' + dt.getUTCMinutes() + ':' + dt.getUTCSeconds()
+          result = getUTCDateString(dt) + ' ' + getUTCTimeString(dt)
+        } else {
+          result = getDateString(dt) + ' ' + getTimeString(dt)
         }
       } else if (y && m && d) {
-        result = y + '-' + m + '-' + d
+        dt = new Date(y + '-' + m + '-' + d)
+        result = getDateString(dt)
+      } else if (h && i) {
+        dt = new Date()
+        dt.setHours(h, i, (s ? s : '00'))
         if (IMLibFormat.isFollowTZ) {
-          dt = new Date(result)
-          result = dt.getUTCFullYear() + '-' + (dt.getUTCMonth() + 1) + '-' + dt.getUTCDate()
-        }
-      } else if (h && i && s) {
-        result = h + ':' + i + ':' + s
-        if (IMLibFormat.isFollowTZ) {
-          dt = new Date()
-          dt.setHours(h, i, s)
-          result = dt.getUTCHours() + ':' + dt.getUTCMinutes() + ':' + dt.getUTCSeconds()
+          result = getUTCTimeString(dt)
+        } else {
+          result = getTimeString(dt)
         }
       }
     }
     return result
+
+    function getRegExp(params) {
+      let regexp = '', replacement = []
+      for (let c = 0; c < params.length; c++) {
+        if ((c + 1) < params.length && IMLibFormat.reverseRegExp[params.substr(c, 2)]) {
+          regexp += IMLibFormat.reverseRegExp[params.substr(c, 2)]
+          replacement.push(params.substr(c, 2))
+          c++
+        } else {
+          regexp += params.substr(c, 1)
+        }
+      }
+      return [regexp, replacement]
+    }
+
+    function getDateString(dt) {
+      return dt.getFullYear()
+        + '-' + ('0' + (dt.getMonth() + 1)).slice(-2)
+        + '-' + ('0' + dt.getDate()).slice(-2)
+    }
+
+    function getUTCDateString(dt) {
+      return dt.getUTCFullYear()
+        + '-' + ('0' + (dt.getUTCMonth() + 1)).slice(-2)
+        + '-' + ('0' + dt.getUTCDate()).slice(-2)
+    }
+
+    function getTimeString(dt) {
+      return ('0' + dt.getHours()).slice(-2)
+        + ':' + ('0' + dt.getMinutes()).slice(-2)
+        + ':' + ('0' + dt.getSeconds()).slice(-2)
+    }
+
+    function getUTCTimeString(dt) {
+      return ('0' + dt.getUTCHours()).slice(-2)
+        + ':' + ('0' + dt.getUTCMinutes()).slice(-2)
+        + ':' + ('0' + dt.getUTCSeconds()).slice(-2)
+    }
+
+    function getTwoDigitString(s) {
+      if(s===null||isNaN(s)||typeof s === 'undefined') {
+        return s
+      }
+      return ('00' + s).slice(-2)
+    }
   },
 
   reverseRegExp: {
