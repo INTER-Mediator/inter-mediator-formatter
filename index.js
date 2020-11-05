@@ -597,7 +597,7 @@ const IMLibFormat = {
     const hasDash = str.indexOf('-') > -1
     const kind = flags.trim().toUpperCase()
     if (kind == 'DATETIMELOCAL') {
-      params = '%Y-%m-%dT%H:%I:%S'
+      params = '%Y-%M-%DT%H:%I:%S'
       if (!hasColon && (hasSlash || hasDash)) {
         str += ' 00:00:00'
       }
