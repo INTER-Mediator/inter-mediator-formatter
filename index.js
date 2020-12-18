@@ -121,6 +121,10 @@ const IMLibFormat = {
       n = n * 100
     }
 
+    if (flags.upTo3Digits > 0) {
+      n = n / Math.pow(10, flags.upTo3Digits)
+    }
+
     underDot = (digit === undefined) ? INTERMediatorLocale.frac_digits : IMLibFormat.toNumber(digit)
     power = Math.pow(10, underDot)
     roundedNum = Math.round(n * power)
@@ -770,7 +774,7 @@ const IMLibFormat = {
           case '%t':
             mon = matched[c + 1]
             m = IMLibFormat.eMonAbbr.indexOf(mon.substr(0, 1).toUpperCase() + mon.substr(1, 2).toLowerCase())
-            m = getTwoDigitString(m+1)
+            m = getTwoDigitString(m + 1)
             break
           case '%D':
           case '%d':
@@ -851,7 +855,7 @@ const IMLibFormat = {
     }
 
     function getTwoDigitString(s) {
-      if(s===null||isNaN(s)||typeof s === 'undefined') {
+      if (s === null || isNaN(s) || typeof s === 'undefined') {
         return s
       }
       return ('00' + s).slice(-2)

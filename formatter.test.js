@@ -124,6 +124,21 @@ test('IMLibFormat.decimalFormat() Test: each 3-digits should be devided \'\' if 
   expect(IMLibFormat.decimalFormat(999999, -2, flags)).toBe('1,000,000')
   expect(IMLibFormat.decimalFormat(999999, -3, flags)).toBe('1,000,000')
 })
+test('IMLibFormat.decimalFormat() Test: upTo3Digits checking.', function () {
+  'use strict'
+  expect(IMLibFormat.decimalFormat(7777777777, 0, {upTo3Digits: 0})).toBe('7777777777')
+  expect(IMLibFormat.decimalFormat(7777777777, 0, {upTo3Digits: 3})).toBe('7777778')
+  expect(IMLibFormat.decimalFormat(7777777777, 0, {upTo3Digits: 6})).toBe('7778')
+  expect(IMLibFormat.decimalFormat(7777777777, 0, {upTo3Digits: 9})).toBe('8')
+  expect(IMLibFormat.decimalFormat(-7777777777, 0, {upTo3Digits: 0})).toBe('-7777777777')
+  expect(IMLibFormat.decimalFormat(-7777777777, 0, {upTo3Digits: 3})).toBe('-7777778')
+  expect(IMLibFormat.decimalFormat(-7777777777, 0, {upTo3Digits: 6})).toBe('-7778')
+  expect(IMLibFormat.decimalFormat(-7777777777, 0, {upTo3Digits: 9})).toBe('-8')
+
+  expect(IMLibFormat.decimalFormat(7777777777, 0, {upTo3Digits: 3,useSeparator: true})).toBe('7,777,778')
+  expect(IMLibFormat.decimalFormat(-7777777777, 2, {upTo3Digits: 3,useSeparator: true})).toBe('-7,777,777.78')
+  expect(IMLibFormat.decimalFormat(-7777777777, 3, {upTo3Digits: 3,useSeparator: true})).toBe('-7,777,777.777')
+})
 test('IMLibFormat.decimalFormat(0) should return \'\' if blankifzero is enabled.', function () {
   'use strict'
   var flags = {blankIfZero: true}

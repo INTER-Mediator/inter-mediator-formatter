@@ -1,6 +1,6 @@
 {
     "name": "inter-mediator-formatter",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "description": "The string formatter of INTER-Mediator core.",
     "main": "index.js",
     "type": "module",
@@ -16,7 +16,7 @@
         "format"
     ],
     "devDependencies": {
-        "jest": "^26.6.0",
+        "jest": "^26.6.3",
         "lodash": "^4.17.20"
     },
     "dependencies": {},
