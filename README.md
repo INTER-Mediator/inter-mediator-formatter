@@ -1,2 +1,2 @@
-# inter-mediator-formatter [![Build Status](https://travis-ci.org/INTER-Mediator/inter-mediator-formatter.svg?branch=master)](https://travis-ci.org/github/INTER-Mediator/inter-mediator-formatter)
+# inter-mediator-formatter [![Build Status](https://github.com/INTER-Mediator/inter-mediator-formatter/actions/workflows/node.js.yml/badge.svg)](https://github.com/INTER-Mediator/inter-mediator-formatter/actions/workflows/node.js.yml)
 The string formatter of INTER-Mediator core.
