@@ -308,3 +308,68 @@ test('IMLibFormat.getKanjiNumber() should return the kanji numbers.', function (
   expect(IMLibFormat.getKanjiNumber(45)).toBe('四十五')
   expect(IMLibFormat.getKanjiNumber(2345)).toBe('二千三百四十五')
 })
+
+test('IMLibFormat.markdownFormat() has to return the tagged text.',function(){
+  let string = "-a\n-b"
+  let expected = "<div class='_im_markdown'>"
+    + "<ul class='_im_markdown_ul'>"
+    + "<li class='_im_markdown_li'>a</li>"
+    + "<li class='_im_markdown_li'>b</li>"
+    + "</ul></div>";
+  expect(IMLibFormat.markdownFormat(string)).toBe(expected)
+
+  string = "-a\n--b"
+  expected = "<div class='_im_markdown'>"
+    + "<ul class='_im_markdown_ul'>"
+    + "<li class='_im_markdown_li'>a"
+    + "<ul class='_im_markdown_ul'><li class='_im_markdown_li'>b</li></ul>"
+    + "</li></ul></div>"
+  expect(IMLibFormat.markdownFormat(string)).toBe(expected)
+
+  string = "-a\n--b\n--c\n-a\n--b\n--c"
+  expected = "<div class='_im_markdown'>"
+    + "<ul class='_im_markdown_ul'>"
+    + "<li class='_im_markdown_li'>a"
+    + "<ul class='_im_markdown_ul'><li class='_im_markdown_li'>b</li>"
+    + "<li class='_im_markdown_li'>c</li></ul></li>"
+    + "<li class='_im_markdown_li'>a"
+    + "<ul class='_im_markdown_ul'><li class='_im_markdown_li'>b</li>"
+    + "<li class='_im_markdown_li'>c</li></ul></li>"
+    + "</ul></div>"
+  expect(IMLibFormat.markdownFormat(string)).toBe(expected)
+
+  string = "*TEST\n|a|b|c|h\n|a|b|c|\n"
+  expected = "<div class='_im_markdown'>"
+    + "<h1 class='_im_markdown_h1'>TEST</h1>"
+    + "<table class='_im_markdown_table'>"
+    + "<tr class='_im_markdown_tr'>"
+    + "<th class='_im_markdown_th'>a</th>"
+    + "<th class='_im_markdown_th'>b</th>"
+    + "<th class='_im_markdown_th'>c</th>"
+    + "</tr>"
+    + "<tr class='_im_markdown_tr'>"
+    + "<td class='_im_markdown_td'>a</td>"
+    + "<td class='_im_markdown_td'>b</td>"
+    + "<td class='_im_markdown_td'>c</td>"
+    + "</tr>"
+    + "</table>"
+    + "<p class='_im_markdown_para'></p>"
+    + "</div>"
+  expect(IMLibFormat.markdownFormat(string)).toBe(expected)
+
+  string = "*TEST\nURL is:\nhttps://inter-mediator.com/img/test.png"
+  expected = "<div class='_im_markdown'>"
+    + "<h1 class='_im_markdown_h1'>TEST</h1>"
+    + "<p class='_im_markdown_para'>URL is:</p>"
+    + "<p class='_im_markdown_para'>"
+    + "<a href=\"https://inter-mediator.com/img/test.png\" target=\"_blank\">https://inter-mediator.com/img/test.png</a>"
+    + "</p>"
+    + "</div>"
+  expect(IMLibFormat.markdownFormat(string)).toBe(expected)
+
+  string = "@@IMG[https://inter-mediator.com/img/test.png]"
+  expected = "<div class='_im_markdown'>"
+    + "<p class='_im_markdown_para_img'>"
+    + "<img src='https://inter-mediator.com/img/test.png'></p></div>"
+  expect(IMLibFormat.markdownFormat(string)).toBe(expected)
+})

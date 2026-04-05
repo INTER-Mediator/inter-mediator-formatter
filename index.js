@@ -600,12 +600,12 @@ const IMLibFormat = {
     const hasSlash = str.indexOf('/') > -1
     const hasDash = str.indexOf('-') > -1
     const kind = flags.trim().toUpperCase()
-    if (kind == 'DATETIMELOCAL') {
+    if (kind === 'DATETIMELOCAL') {
       params = '%Y-%M-%DT%H:%I:%S'
       if (!hasColon && (hasSlash || hasDash)) {
         str += ' 00:00:00'
       }
-    } else if (kind == 'TIMELOCAL') {
+    } else if (kind === 'TIMELOCAL') {
       const hasSecondColon = str.indexOf(':', str.indexOf(':') + 1)
       params = '%H:%I:%S'
       if (!hasColon) {
@@ -729,16 +729,16 @@ const IMLibFormat = {
 
   convertDateTimeImpl: function (value, params, flags) {
     'use strict'
-    let c, dt, result, regexp = '', replacement = []
-    let r, matched, y, m, d, h, i, s, paramStr, key, mon, anotherParams = null
+    let c, dt, result, regexp, replacement
+    let matched, y, m, d, h, i, s, paramStr, key, mon, anotherParams = null
     const kind = flags.trim().toUpperCase()
     IMLibFormat.reverseRegExp['%N'] =
       '(' + (typeof (INTERMediatorLocale) == 'undefined' ? 'AM' : INTERMediatorLocale.AM_STR)
       + '|' + (typeof (INTERMediatorLocale) == 'undefined' ? 'PM' : INTERMediatorLocale.PM_STR) + ')'
-    if (kind == 'DATETIMELOCAL') {
+    if (kind === 'DATETIMELOCAL') {
       params = '%Y-%m-%dT%H:%i:%s'
       anotherParams = '%Y-%m-%dT%H:%i'
-    } else if (kind == 'TIMELOCAL') {
+    } else if (kind === 'TIMELOCAL') {
       params = '%H:%i:%s'
       anotherParams = '%H:%i'
     } else {
@@ -750,7 +750,7 @@ const IMLibFormat = {
           params += ' ' + INTERMediatorLocale['T_FMT_' + paramStr]
         }
       }
-      params = params.replace(/([\(\)])/g, '\\$1')
+      params = params.replace(/([()])/g, '\\$1')
     }
     [regexp, replacement] = getRegExp(params)
     matched = (new RegExp(regexp)).exec(value)
@@ -893,6 +893,142 @@ const IMLibFormat = {
     '%p': '(am|pm)', // am/pm am
     '%N': '(AM|PM)', // am/pm am
     '%%': '[\%]' // パーセント %
+  },
+
+  markdownFormat: function (str) {
+    if (!str) {
+      return "";
+    }
+    return taggingAsMarkdown(replaceLinkToATag(replaceTags(str)));
+
+    function replaceTags(str) {
+      if (!str) {
+        return "";
+      }
+      return str.replaceAll(">", "&gt;")
+        .replaceAll("<", "&lt;")
+        .replaceAll("'", "&#39;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("&", "&amp;");
+    }
+
+    function replaceLinkToATag(str) {
+      if (!str) {
+        return "";
+      }
+      const pattern = new RegExp("(https?|ftp)(://[-_.!~*'()a-zA-Z0-9;/?:@&=+$,%#]+)", "gi")
+      let array
+      let src = str
+      let result = ""
+      while ((array = pattern.exec(src)) !== null) {
+        const pos = pattern.lastIndex
+        const startIndex = pos - array[0].length
+        const preStr = startIndex>=6 ? src.substring(startIndex - 6, startIndex) : ""
+        if (preStr !== "@@IMG[") {
+          result += src.substring(0, startIndex) + `<a href="${array[0]}" target="_blank">${array[0]}</a>`
+        } else {
+          result += src.substring(0, startIndex) + array[0]
+        }
+        src = src.substring(pos)
+      }
+      result += src
+      return result
+    }
+
+    function taggingAsMarkdown(str) {
+      const result = ["<div class='_im_markdown'>"];
+      const unifyCRLF = str.replaceAll("\r\n", "\n").replaceAll("\r", "\n")
+      const eachLine = unifyCRLF.split("\n");
+      let prevDepth = -1;
+      let inTable = false;
+      for (const aLine of eachLine) {
+        let minusCount = 0;
+        let paraCount = 0;
+        for (let i = 0; i < aLine.length; i++) {
+          const c = aLine.substring(i, i + 1);
+          if (c === "-") {
+            minusCount++;
+          } else if (c === "*") {
+            paraCount++;
+          } else {
+            break;
+          }
+        }
+        if (prevDepth > 0) {
+          if (minusCount === prevDepth) {
+            result.push("</li>");
+          } else if (minusCount < prevDepth) {
+            for (let i = 0; i < (prevDepth - minusCount); i++) {
+              result.push("</li></ul></li>");
+            }
+          }
+        }
+        if (inTable && aLine.substring(0, 1) !== "|") {
+          result.push("</table>");
+          inTable = false;
+        }
+        if (minusCount > 0) {
+          if (minusCount > prevDepth) {
+            result.push("<ul class='_im_markdown_ul'>");
+          }
+          result.push("<li class='_im_markdown_li'>" + aLine.substring(minusCount));
+        } else if (paraCount > 0) {
+          const tag = `h${paraCount}`
+          result.push(`<${tag} class='_im_markdown_${tag}'>` + aLine.substring(paraCount) + `</${tag}>`)
+        } else if (aLine.substring(0, 3) === "###") {
+          result.push("<p class='_im_markdown_p3'>" + aLine.substring(3) + "</p>")
+        } else if (aLine.substring(0, 2) === "##") {
+          result.push("<p class='_im_markdown_p2'>" + aLine.substring(2) + "</p>")
+        } else if (aLine.substring(0, 1) === "#") {
+          result.push("<p class='_im_markdown_p1'>" + aLine.substring(1) + "</p>")
+        } else if (aLine.substring(0, 6) === "@@IMG[") {
+          let endPos = aLine.indexOf(']', 6);
+          if (endPos < 0) {
+            endPos = aLine.lehgth - 6;
+          } else {
+            endPos = endPos - 6;
+          }
+          const uri = aLine.substring(6, 6 + endPos)
+          result.push(`<p class='_im_markdown_para_img'><img src='${uri}'></p>`);
+        } else if (aLine.substring(0, 1) === "|") {
+          if (!inTable) {
+            result.push("<table class='_im_markdown_table'>");
+          }
+          result.push("<tr class='_im_markdown_tr'>");
+          // const sLen = aLine.length - ((aLine.slice(-1) === "|") ? 2 : 1);
+          let endPos = aLine.length - 1
+          let cellTag = "td"
+          if (aLine.slice(-1) === "|") {
+            endPos -= 1
+          } else if (aLine.slice(-2).toLowerCase() === "|h") {
+            endPos -= 2
+            cellTag = "th"
+          }
+          for (const aCell of aLine.substring(1, endPos + 1).split("|")) {
+            result.push(`<${cellTag} class='_im_markdown_${cellTag}'>${aCell}</${cellTag}>`);
+          }
+          result.push("</tr>");
+          inTable = true;
+        } else {
+          result.push(`<p class='_im_markdown_para'>${aLine}</p>`);
+        }
+        prevDepth = minusCount;
+      }
+      if (prevDepth > 0) {
+        for (let i = 0; i < prevDepth; i++) {
+          result.push("</li></ul>");
+        }
+      }
+      if (inTable) {
+        result.push("</table>");
+      }
+      result.push("</div>");
+      return result.join('');
+    }
+  },
+
+  converMarkdown: function (curVal, params, flags) {
+    return curVal;
   }
 }
 
